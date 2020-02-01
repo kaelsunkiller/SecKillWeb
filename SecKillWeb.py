@@ -27,6 +27,7 @@ class SecKillWeb():
         self.users = {}
         self.items_url = []
         self.items_prefer = []
+        self.items_num = []
         self.browers = None
         self.check_delay_top = 15
         self.check_delay_btm = 2
@@ -61,6 +62,8 @@ class SecKillWeb():
                         flag = 'items'
                     elif '[items-prefer]' == line:
                         flag = 'prefer'
+                    elif '[items-num]' == line:
+                        flag = 'num'
                     elif '[config-params]' == line:
                         flag = 'params'
                     elif line.startswith('[') and line.endswith(']'):
@@ -73,6 +76,12 @@ class SecKillWeb():
                         if line.isdigit():
                             line = int(line)
                         self.items_prefer.append(line)
+                    elif 'num' == flag:
+                        if line.isdigit():
+                            line = int(line)
+                        else:
+                            line = 1
+                        self.items_num.append(line)
                     elif 'params' == flag:
                         line = line.split('=')
                         if 'check_delay_top' == line[0]:
@@ -89,11 +98,14 @@ class SecKillWeb():
                             self.headless = int(line[1])
                 for i in range(0, len(info), 2):
                     self.users[info[i]] = info[i+1]
+                self.items_prefer.reverse()
+                self.items_num.reverse()
                 if not self.users:
                     self.login_auto = False
-                    self.logger.warn('[user-info] title is missing, please add it as a separate line before user info.')
+                    self.logger.warn('[user-info] title is missing, auto login disabled.')
                 if not self.items_url:
                     raise Exception('[items-url] title is missing, mission list is empty.')
+
 
     def _login_auto(self, browser, user_name, pwd):
         browser.find_element_by_xpath("//*[text()='登录/注册']").click()  # login-btn
@@ -127,7 +139,7 @@ class SecKillWeb():
             return False
         return True
 
-    def _check_once(self, browser, prefer=None):
+    def _check_once(self, browser, prefer=None, num=None):
         buy_btn = browser.find_elements_by_xpath("//*[text()='立即购买']")
         if buy_btn:
             if prefer:
@@ -139,6 +151,8 @@ class SecKillWeb():
                         if choice.text in prefer:
                             choice.click()
                             break
+            if num:
+                browser.find_element_by_xpath("//*[@class='u-selnum']/input").send_keys(num)
             buy_btn.click()  # buy-now
             browser.find_element_by_xpath("//*[@id='confirmRoot']/div/div[3]/div[2]/div[2]/div[2]/div/div[2]/input")
             return True
@@ -188,15 +202,25 @@ class SecKillWeb():
                 window = windows[i]
                 if window != browser.current_window_handle:
                     browser.switch_to.window(window)
+                item_id = 0
                 for r in range(self.refresh_time):
                     browser.refresh()
                     if browser.current_url in self.items_url:
+                        item_id = self.items_url.index(browser.current_url) + 1
                         break
                     else:
                         self.logger.debug('user {} refresh time {}, {}'.format(user_name, r, browser.current_url))
-                    if r == self.refresh_time-1:
-                        self.logger.debug('user {} page {} blocked at {}'.format(user_name, browser.current_window_handle, time_exc))
-                if self._check_once(browser):
+                        if r == self.refresh_time-1:
+                            self.logger.debug('user {} page {} blocked at {}'.format(user_name, browser.current_window_handle, time_exc))
+                if self.items_prefer:
+                    prefer = self.items_prefer[item_id]
+                else:
+                    prefer = None
+                if self.items_num:
+                    num = self.items_num[item_id]
+                else:
+                    num = None
+                if self._check_once(browser, prefer=prefer, num=num):
                     open_file_os('alarm.wav')
                     browser.close()
                     self.logger.warn('{} has mission complete, check now!'.format(user_name))
@@ -217,7 +241,7 @@ class SecKillWeb():
                         wt = random.randrange(self.check_delay_btm, self.check_delay_top)
                         time.sleep(wt)
                         time_exc += wt
-                    self.logger.warn('{} executed time {:.12f}'.format(user_name, time_exc/3600))
+                        self.logger.warn('{} executed time {:.12f}'.format(user_name, time_exc/3600))
             return
         except Exception as e:
             browser.quit()
