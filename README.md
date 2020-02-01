@@ -19,7 +19,7 @@ Support `multi-user` and `multi-task`. Only support [**网易优选**](https://y
 
 ### 下载Chromedrive
 到[**chromedrive**](http://npm.taobao.org/mirrors/chromedriver/)将chromedriver.exe移动到python安装目录（含有python.exe的文件夹）
-版本查看请在`设置→关于Chrome`查看
+版本查看请在`Chrome→设置→关于Chrome`查看
 
 ### 用户配置
 使用`笔记本程序`或`notepad++`编辑`config.ini`文件<br>
