@@ -56,5 +56,9 @@ headless=1            是否使用图形化界面，为0时将后台运行，看
 `python SecKillWeb.py`
 如需终止，在终端中按下`ctrl`+`c`（windows）或`ctrl`+`c`（Mac），等待片刻即可
 
+### 注意事项
+
+需要提前设置默认地址
+
 ## License
 Copyright (c) 2020, kaelsunkiller. For more details please see [**LICENSE.md**](https://github.com/kaelsunkiller/SecKillWeb/blob/master/LICENSE)
