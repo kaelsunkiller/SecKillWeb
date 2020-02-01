@@ -36,9 +36,11 @@ windows一般在`C:\Program Files\Python`<br>
 ![](https://github.com/kaelsunkiller/SecKillWeb/blob/master/readme/2.PNG)<br>
 也可为数字（需为纯数字，否则认定为字符串，标识选项位置，表示目标选项在选项条中为第几个，如“黑色”可写为0，“白色”可写为1，注：位置数从0开始）<br>
 若需要则需要全部填写，不需要则删除[items-prefer]及标签下内容，程序会按网页默认选项购买<br>
+“无”表示使用默认选项
 
 [items-num]
 商品数量设置，同[items-prefer]，仅接受纯数字<br>
+0表示使用默认数量
 
 [user-info]<br>
 用户信息，两行为一组，分别为登录用户名和密码（目前使用手机号和密码，请自行设置），支持多用户并发，可根据硬件配置自行调整<br>
