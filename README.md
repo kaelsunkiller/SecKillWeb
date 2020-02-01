@@ -14,7 +14,7 @@ Support `multi-user` and `multi-task`. Only support [**网易优选**](https://y
 各平台使用命令行安装requirement.txt<br>
 * 如windows右键开始菜单打开命令行，输入：<br>
 `cd your-path/SecKillWeb/`<br>
-`python install -r requirement.txt`
+`pip install -r requirement.txt`
 * 其他环境同理
 
 ### 下载Chromedrive
