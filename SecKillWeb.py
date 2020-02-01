@@ -213,11 +213,15 @@ class SecKillWeb():
                         if r == self.refresh_time-1:
                             self.logger.debug('user {} page {} blocked at {}'.format(user_name, browser.current_window_handle, time_exc))
                 if self.items_prefer:
-                    prefer = self.items_prefer[item_id]
+                    prefer = self.items_prefer[item_id-1]
+                    if '无' == prefer:
+                        prefer = None
                 else:
                     prefer = None
                 if self.items_num:
-                    num = self.items_num[item_id]
+                    num = self.items_num[item_id-1]
+                    if num < 1:
+                        num = None
                 else:
                     num = None
                 if self._check_once(browser, prefer=prefer, num=num):
