@@ -10,6 +10,7 @@
 import os
 import time
 import random
+import re
 from multiprocessing import Process
 from utils import create_logger, open_file_os
 from selenium import webdriver
@@ -18,6 +19,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.keys import Keys
 
 
 class SecKillWeb():
@@ -137,36 +139,47 @@ class SecKillWeb():
             return False
         return True
 
-    def _check_once(self, browser, prefer=None, num=None, refresh=None):
+    def _check_once(self, browser, prefer=None, num=None, refresh=False):
         buy_btn = browser.find_elements_by_xpath("//*[text()='立即购买']")
         if buy_btn:
             if prefer:
                 try:
                     choices = browser.find_element_by_xpath('//*[@class="cont"]').find_elements_by_css_selector('li')
                     if isinstance(prefer, int) and prefer < len(choices):
-                        choices[prefer].click()
+                        is_active = choices[prefer].find_element_by_css_selector('a').get_attribute('class')
+                        if 'dis' not in is_active:
+                            choices[prefer].click()
                     elif isinstance(prefer, str):
                         for i, choice in enumerate(choices):
-                            if choice.text in prefer:
-                                choice.click()
+                            text = choice.find_element_by_class_name('title').get_attribute('innerText')
+                            if prefer in text:
+                                is_active = choice.find_element_by_css_selector('a').get_attribute('class')
+                                if 'dis' not in is_active:
+                                    choice.click()
                                 break
                 except Exception as e:
-                    self.logger.warn('change prefer error:', e)
+                    self.logger.warn('change prefer error:\n{}'.format(repr(e)))
                     pass
             if num:
                 try:
                     in_blank = browser.find_element_by_xpath("//*[@class='u-selnum ']/input")
-                    ActionChains(browser).double_click(in_blank).perform()
-                    in_blank.send_keys(num)
+                    if in_blank.is_enabled():
+                        stock = browser.find_elements_by_xpath("//span[@class='stock']")
+                        if stock:
+                            s_num = re.findall(r'\d+', stock[0].text)
+                            if s_num and num > int(s_num[0]):
+                                num = int(s_num[0])
+                        ActionChains(browser).double_click(in_blank).perform()
+                        in_blank.send_keys(num)
                 except Exception as e:
-                    self.logger.warn('change num error:', e)
+                    self.logger.warn('change num error:\n{}'.format(repr(e)))
                     pass
             try:
-                buy_btn.click()  # buy-now
-                browser.find_element_by_xpath("//*[@id='confirmRoot']/div/div[3]/div[2]/div[2]/div[2]/div/div[2]/input")
+                buy_btn[0].click()  # buy-now
+                browser.find_element_by_xpath("//*[@value='去付款']")
                 return True
             except Exception as e:
-                self.logger.warn('snap up error:', e)
+                self.logger.warn('snap up error:{}'.format(repr(e)))
                 if not refresh:
                     if self._check_once(browser, prefer=prefer, num=num, refresh=True):
                         return True
@@ -217,9 +230,9 @@ class SecKillWeb():
             i = 0
             time_exc = 0
             while self.always_circle or time_exc < self.time_out:
-                window = windows[i]
-                if window != browser.current_window_handle:
-                    browser.switch_to.window(window)
+                current_window = windows[i]
+                if current_window != browser.current_window_handle:
+                    browser.switch_to.window(current_window)
                 item_id = 0
                 for r in range(self.refresh_time):
                     browser.refresh()
@@ -244,9 +257,12 @@ class SecKillWeb():
                     num = None
                 if self._check_once(browser, prefer=prefer, num=num):
                     open_file_os('alarm.wav')
+                    if current_window != browser.current_window_handle:
+                        browser.switch_to.window(current_window)
                     browser.close()
+                    # ActionChains(browser).key_down(Keys.CONTROL).send_keys("w").key_up(Keys.CONTROL).perform()
                     self.logger.warn('{} has mission complete, check now!'.format(user_name))
-                    with open('./ALARM.txt', 'w') as writter:
+                    with open('./ALARM.txt', 'a+') as writter:
                         writter.write('{} has mission:\n{}\ncomplete, check now!'.format(user_name, browser.current_url))
                     open_file_os('ALARM.txt')
                     try:
