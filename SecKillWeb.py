@@ -98,8 +98,6 @@ class SecKillWeb():
                             self.headless = int(line[1])
                 for i in range(0, len(info), 2):
                     self.users[info[i]] = info[i+1]
-                self.items_prefer.reverse()
-                self.items_num.reverse()
                 if not self.users:
                     self.login_auto = False
                     self.logger.warn('[user-info] title is missing, auto login disabled.')
@@ -139,23 +137,43 @@ class SecKillWeb():
             return False
         return True
 
-    def _check_once(self, browser, prefer=None, num=None):
+    def _check_once(self, browser, prefer=None, num=None, refresh=None):
         buy_btn = browser.find_elements_by_xpath("//*[text()='立即购买']")
         if buy_btn:
             if prefer:
-                choices = browser.find_element_by_xpath('//*[@class="cont"]').find_elements_by_css_selector('li')
-                if isinstance(prefer, int) and prefer < len(choices):
-                    choices[prefer].click()
-                elif isinstance(prefer, str):
-                    for i, choice in enumerate(choices):
-                        if choice.text in prefer:
-                            choice.click()
-                            break
+                try:
+                    choices = browser.find_element_by_xpath('//*[@class="cont"]').find_elements_by_css_selector('li')
+                    if isinstance(prefer, int) and prefer < len(choices):
+                        choices[prefer].click()
+                    elif isinstance(prefer, str):
+                        for i, choice in enumerate(choices):
+                            if choice.text in prefer:
+                                choice.click()
+                                break
+                except Exception as e:
+                    self.logger.warn('change prefer error:', e)
+                    pass
             if num:
-                browser.find_element_by_xpath("//*[@class='u-selnum']/input").send_keys(num)
-            buy_btn.click()  # buy-now
-            browser.find_element_by_xpath("//*[@id='confirmRoot']/div/div[3]/div[2]/div[2]/div[2]/div/div[2]/input")
-            return True
+                try:
+                    in_blank = browser.find_element_by_xpath("//*[@class='u-selnum ']/input")
+                    ActionChains(browser).double_click(in_blank).perform()
+                    in_blank.send_keys(num)
+                except Exception as e:
+                    self.logger.warn('change num error:', e)
+                    pass
+            try:
+                buy_btn.click()  # buy-now
+                browser.find_element_by_xpath("//*[@id='confirmRoot']/div/div[3]/div[2]/div[2]/div[2]/div/div[2]/input")
+                return True
+            except Exception as e:
+                self.logger.warn('snap up error:', e)
+                if not refresh:
+                    if self._check_once(browser, prefer=prefer, num=num, refresh=True):
+                        return True
+                    else:
+                        return False
+                else:
+                    return False
         else:
             return False
 
@@ -211,7 +229,7 @@ class SecKillWeb():
                     else:
                         self.logger.debug('user {} refresh time {}, {}'.format(user_name, r, browser.current_url))
                         if r == self.refresh_time-1:
-                            self.logger.debug('user {} page {} blocked at {}'.format(user_name, browser.current_window_handle, time_exc))
+                            self.logger.warn('user {} page {} blocked at {}'.format(user_name, browser.current_window_handle, time_exc))
                 if self.items_prefer:
                     prefer = self.items_prefer[item_id-1]
                     if '无' == prefer:
