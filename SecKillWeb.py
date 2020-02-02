@@ -176,7 +176,7 @@ class SecKillWeb():
                     pass
             try:
                 buy_btn[0].click()  # buy-now
-                browser.find_element_by_xpath("//*[@value='去付款']")
+                browser.find_element_by_xpath("//*[@value='去付款']").click()
                 return True
             except Exception as e:
                 self.logger.warn('snap up error:{}'.format(repr(e)))
