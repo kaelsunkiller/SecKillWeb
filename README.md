@@ -63,7 +63,7 @@ headless=1            是否使用图形化界面，为0时将后台运行，看
 
 ### 注意事项
 
-需要提前设置默认地址
+需要提前设置默认收货地址
 
 ## License
 Copyright (c) 2020, kaelsunkiller. For more details please see [**LICENSE.md**](https://github.com/kaelsunkiller/SecKillWeb/blob/master/LICENSE)
